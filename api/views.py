@@ -10,7 +10,7 @@ from .serializers import ReviewSerializer, CommentSerializer
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = [OwnResourcePermission, permissions.AllowAny]
+    permission_classes = [OwnResourcePermission]
     #filter_backends = [DjangoFilterBackend]
     #filterset_fields = ['group']
 
@@ -23,9 +23,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [OwnResourcePermission]
 
     def get_queryset(self):
-        post = get_object_or_404(Review, id=self.kwargs.get('post_id'))
-        return post.comments.all()
+        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        return review.comments.all()
 
     def perform_create(self, serializer):
-        get_object_or_404(Review, id=self.kwargs.get('post_id'))
+        get_object_or_404(Review, id=self.kwargs.get('review_id'))
         serializer.save(author=self.request.user)
