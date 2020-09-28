@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class ReviewsAndCommentsConfig(AppConfig):
+class ApiConfig(AppConfig):
     name = 'api'
