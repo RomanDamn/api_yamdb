@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Review, Comment
+from .models import User, Review, Comment
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -17,3 +17,14 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Comment
+
+
+class UserCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('username', 'pk', 'first_name', 'last_name', 'email', 'role', 'bio')
+        model = User
+
+
+class TokenSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    confirmation_code = serializers.CharField(required=True)
