@@ -1,5 +1,6 @@
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
+from rest_framework.permissions import SAFE_METHODS
 
 
 class OwnResourcePermission(BasePermission):
@@ -13,3 +14,8 @@ class IsAdminPerm(permissions.BasePermission):
         if request.user.role == 'admin' or request.user.is_staff:
             return True
         return False
+
+
+class ReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        return request.method in SAFE_METHODS

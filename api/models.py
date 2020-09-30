@@ -1,8 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext as _
+from datetime import datetime
 
+#max_value_current_year = 2100
 #User = get_user_model()
 
 
@@ -45,3 +49,52 @@ class Comment(models.Model):
     pub_date = models.DateTimeField("Дата добавления",
                                     auto_now_add=True,
                                     db_index=True)
+
+
+class Categories(models.Model):
+    name = models.CharField(max_length=120)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Genres(models.Model):
+    name = models.CharField(max_length=120)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+
+def current_year():
+    return datetime.now().strftime('%Y')
+
+def max_value_current_year(value):
+    if value > 2100:
+        raise ValidationError(
+            _('%(value)s is not a correct year!'),
+            params={'value': value},
+        )
+
+
+class Titles(models.Model):
+    name = models.CharField(max_length=300)
+    year = models.PositiveIntegerField(
+        default = current_year(), validators=[MinValueValidator(1450), max_value_current_year])
+    category = models.ForeignKey(
+        Categories,
+        on_delete=models.SET_NULL,
+        related_name="categories",
+        blank=True,
+        null=True,
+    )
+    description = models.TextField(null=True, blank=True)
+    genre = models.ManyToManyField(
+        Genres,
+        related_name="genres",
+    )
+
+    def __str__(self):
+        return f'{self.name} ({self.year}г.)'
