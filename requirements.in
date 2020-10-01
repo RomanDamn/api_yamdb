@@ -2,3 +2,8 @@ pytest-django
 requests
 django
 djangorestframework
+django-cors-headers
+pyjwt
+djangorestframework
+djangorestframework-jwt
+

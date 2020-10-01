@@ -1,35 +1,50 @@
-from django.shortcuts import get_object_or_404
-#from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets, mixins, permissions
-
-from .models import Review
-from .permissions import OwnResourcePermission
-from .serializers import ReviewSerializer, CommentSerializer
 import random
 import string
 
+from django.core.mail import send_mail
+from django.db import IntegrityError
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import (filters, generics, mixins,
+                            permissions, status,
+                            viewsets)
+from rest_framework.exceptions import ParseError
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User
-from django.core.mail import send_mail
-from rest_framework.views import APIView
-from .serializers import UserCodeSerializer, TokenSerializer
-from rest_framework import permissions, status, viewsets, generics
-from .permissions import IsAdminPerm
+from .filters import TitleFilter
+from .models import Categories, Genres, Review, Titles, User
+from .permissions import (IsAdminPerm,
+                          OwnResourcePermission,
+                          ReadOnly)
+from .serializers import (CategoriesSerializer, CommentSerializer,
+                          GenresSerializer, ReviewSerializer,
+                          TitleListSerializer, TitlePostSerializer,
+                          TokenSerializer, UserCodeSerializer)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [OwnResourcePermission]
-    #filter_backends = [DjangoFilterBackend]
-    #filterset_fields = ['group']
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        title = get_object_or_404(Titles,
+                                  pk=self.kwargs['title_id'])
+        try:
+            serializer.save(author=self.request.user, title=title)
+        except IntegrityError:
+            raise ParseError(detail="Автор уже отставил"
+                                    " свой обзор на этот пост")
+
+    def get_queryset(self):
+        review = get_object_or_404(Titles,
+                                   id=self.kwargs['title_id'])
+        return review.title.all()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -37,12 +52,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [OwnResourcePermission]
 
     def get_queryset(self):
-        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        review = get_object_or_404(Review,
+                                   id=self.kwargs.get('review_id'))
         return review.comments.all()
 
     def perform_create(self, serializer):
-        get_object_or_404(Review, id=self.kwargs.get('review_id'))
-        serializer.save(author=self.request.user)
+        review = get_object_or_404(Review,
+                                   id=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review=review)
 
 
 class CreateCodeViewSet(APIView):
@@ -52,9 +69,12 @@ class CreateCodeViewSet(APIView):
         serializer = UserCodeSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.data.get('email')
-            confirmation_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=30))
+            confirmation_code = ''.join(random.choices
+                                        (string.ascii_uppercase +
+                                         string.digits, k=30))
             User.objects.create(
-                email=email, username=str(email), confirmation_code=confirmation_code, is_active=False
+                email=email, username=str(email),
+                confirmation_code=confirmation_code, is_active=False
             )
             send_mail(
                 f'Код регистрации для YAMDB',
@@ -63,8 +83,11 @@ class CreateCodeViewSet(APIView):
                 [f'{email}'],
                 fail_silently=False,
             )
-            return Response({'result':'Код подтверждения отправлен на почту'}, status=200)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'result':
+                            'Код подтверждения отправлен на почту'},
+                            status=200)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class CodeJWTView(APIView):
@@ -76,14 +99,15 @@ class CodeJWTView(APIView):
             try:
                 user = User.objects.get(
                     email=serializer.data['email'],
-                    confirmation_code=serializer.data['confirmation_code']
+                    confirmation_code=serializer.data
+                    ['confirmation_code']
                 )
 
             except User is None:
                 return Response(
-                                data={'result': 'Юзера нет'},
-                                status=status.HTTP_404_NOT_FOUND
-                                )
+                    data={'result': 'Юзера нет'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
             else:
                 user.save()
                 refresh_token = RefreshToken.for_user(user)
@@ -111,3 +135,52 @@ class GetUsersView(viewsets.ModelViewSet):
     lookup_field = 'username'
     pagination_class = PageNumberPagination
     permission_classes = [permissions.IsAuthenticated, IsAdminPerm]
+
+
+class CatalogViewSet(mixins.CreateModelMixin,
+                     mixins.DestroyModelMixin,
+                     mixins.ListModelMixin,
+                     GenericViewSet):
+    permission_classes = [IsAdminPerm | ReadOnly]
+    lookup_field = 'slug'
+    search_fields = ['=name']
+    filter_backends = [filters.SearchFilter]
+
+
+class CategoriesViewSet(mixins.CreateModelMixin,
+                        mixins.DestroyModelMixin,
+                        mixins.ListModelMixin,
+                        GenericViewSet):
+    queryset = Categories.objects.all()
+    serializer_class = CategoriesSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["=name"]
+    lookup_field = 'slug'
+    permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
+
+
+class GenresViewSet(mixins.CreateModelMixin,
+                    mixins.DestroyModelMixin,
+                    mixins.ListModelMixin,
+                    GenericViewSet):
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["=name"]
+    lookup_field = 'slug'
+    permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
+
+
+class TitlesViewSet(viewsets.ModelViewSet):
+    queryset = Titles.objects.all()
+    pagination_class = PageNumberPagination
+    permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleListSerializer
+        return TitlePostSerializer
