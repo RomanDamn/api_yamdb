@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0017_remove_titles_rating'),
+        ("api", "0017_remove_titles_rating"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='titles',
-            name='rating',
+            model_name="titles",
+            name="rating",
             field=models.IntegerField(blank=True, null=True),
         ),
     ]

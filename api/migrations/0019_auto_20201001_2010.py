@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0018_titles_rating'),
+        ("api", "0018_titles_rating"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='review',
+            name="review",
             unique_together=set(),
         ),
     ]

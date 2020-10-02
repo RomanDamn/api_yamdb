@@ -7,14 +7,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0006_auto_20200930_1853'),
+        ("api", "0006_auto_20200930_1853"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='review',
-            name='title',
-            field=models.ForeignKey(default=2, on_delete=django.db.models.deletion.CASCADE, related_name='Review', to='api.Titles'),
+            model_name="review",
+            name="title",
+            field=models.ForeignKey(
+                default=2,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="Review",
+                to="api.Titles",
+            ),
             preserve_default=False,
         ),
     ]
