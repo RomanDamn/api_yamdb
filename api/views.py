@@ -1,6 +1,5 @@
-import random
-import string
-
+from api_yamdb.settings import YAMDB_EMAIL
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -64,28 +63,26 @@ class CreateCodeViewSet(APIView):
 
     def post(self, request):
         serializer = UserCodeSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.data.get("email")
-            confirmation_code = "".join(
-                random.choices(string.ascii_uppercase + string.digits, k=30)
-            )
-            User.objects.create(
-                email=email,
-                username=str(email),
-                confirmation_code=confirmation_code,
-                is_active=False,
-            )
-            send_mail(
-                f"Код регистрации для YAMDB",
-                f"{confirmation_code}",
-                "yamdb@yamdb.ru",
-                [f"{email}"],
-                fail_silently=False,
-            )
-            return Response(
-                {"result": "Код подтверждения отправлен на почту"}, status=200
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        email = serializer.data.get("email")
+        confirmation_code = default_token_generator.make_token()
+        User.objects.get_or_create(
+            email=email,
+            username=str(email),
+            confirmation_code=confirmation_code,
+            is_active=False,
+        )
+        send_mail(
+            f"Код регистрации для YAMDB",
+            f"{confirmation_code}",
+            YAMDB_EMAIL,
+            [f"{email}"],
+            fail_silently=False,
+        )
+        return Response(
+            {"result": "Код подтверждения отправлен на почту"}, status=200
+        )
 
 
 class CodeJWTView(APIView):
@@ -93,26 +90,20 @@ class CodeJWTView(APIView):
 
     def post(self, request):
         serializer = TokenSerializer(data=self.request.data)
-        if serializer.is_valid():
-            try:
-                user = User.objects.get(
-                    email=serializer.data["email"],
-                    confirmation_code=serializer.data["confirmation_code"],
-                )
-
-            except User is None:
-                return Response(
-                    data={"result": "Юзера нет"}, status=status.HTTP_404_NOT_FOUND
-                )
-            else:
-                user.save()
-                refresh_token = RefreshToken.for_user(user)
-                return Response(
-                    {
-                        "refresh": str(refresh_token),
-                        "token": str(refresh_token.access_token),
-                    }
-                )
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User,
+            email=serializer.data["email"],
+            confirmation_code=serializer.data["confirmation_code"],
+        )
+        user.save()
+        refresh_token = RefreshToken.for_user(user)
+        return Response(
+            {
+                "refresh": str(refresh_token),
+                "token": str(refresh_token.access_token),
+            }
+        )
 
 
 class InfoMeView(generics.RetrieveUpdateAPIView):
