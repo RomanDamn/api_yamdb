@@ -81,13 +81,13 @@ class Review(models.Model):
     author = models.ForeignKey(User,
                                blank=True,
                                on_delete=models.CASCADE,
-                               related_name="reviews")
+                               related_name="review_author")
     score = models.IntegerField(validators=[MinValueValidator(1),
                                             MaxValueValidator(10)])
     title = models.ForeignKey(Title,
                               blank=True,
                               on_delete=models.CASCADE,
-                              related_name="title")
+                              related_name="reviews")
 
     class Meta:
         ordering = ["pub_date"]

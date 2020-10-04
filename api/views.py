@@ -30,7 +30,6 @@ from .serializers import (
 )
 
 
-
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [OwnResourcePermission]
@@ -42,7 +41,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review = get_object_or_404(Title, id=self.kwargs["title_id"])
-        return review.title.all()
+        return review.reviews.all()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -169,7 +168,7 @@ class GenresViewSet(
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().annotate(rating=Avg('title__score'))
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     pagination_class = PageNumberPagination
     permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
     filter_backends = [DjangoFilterBackend]
