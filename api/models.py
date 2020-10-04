@@ -58,9 +58,8 @@ class Titles(models.Model):
     name = models.CharField(max_length=300)
     year = models.PositiveIntegerField(
         default=current_year(),
-        validators=[MinValueValidator(1450), max_value_current_year],
-    )
-    rating = models.IntegerField(blank=True, null=True)
+        validators=[MinValueValidator(1450),
+                    max_value_current_year])
     category = models.ForeignKey(
         Categories,
         on_delete=models.SET_NULL,
@@ -80,15 +79,20 @@ class Titles(models.Model):
 
 class Review(models.Model):
     text = models.TextField(blank=False)
-    pub_date = models.DateTimeField("Дата публикации", auto_now_add=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
-    score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
-    )
-    title = models.ForeignKey(Titles, on_delete=models.CASCADE, related_name="title")
+    pub_date = models.DateTimeField("Дата публикации",
+                                    auto_now_add=True)
+    author = models.ForeignKey(User, blank=True, on_delete=models.CASCADE,
+                               related_name="user")
+    score = models.IntegerField(validators=[MinValueValidator(1),
+                                            MaxValueValidator(10)])
+    title = models.ForeignKey(Titles,
+                              blank=True,
+                              on_delete=models.CASCADE,
+                              related_name="title")
 
     class Meta:
-        unique_together = ["author", "title"]
+        ordering = ["pub_date"]
+        unique_together = ['author', 'title']
 
     def __str__(self):
         return self.text

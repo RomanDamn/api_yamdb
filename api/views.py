@@ -1,11 +1,11 @@
 from api_yamdb.settings import YAMDB_EMAIL
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db import IntegrityError
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, mixins, permissions, status, viewsets
-from rest_framework.exceptions import ParseError
+
+from rest_framework import filters, generics, mixins, permissions, viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -16,6 +16,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .filters import TitleFilter
 from .models import Categories, Genres, Review, Titles, User
+
 from .permissions import IsAdminPerm, OwnResourcePermission, ReadOnly
 from .serializers import (
     CategoriesSerializer,
@@ -29,16 +30,15 @@ from .serializers import (
 )
 
 
+
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [OwnResourcePermission]
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Titles, pk=self.kwargs["title_id"])
-        try:
-            serializer.save(author=self.request.user, title=title)
-        except IntegrityError:
-            raise ParseError(detail="Автор уже отставил" " свой обзор на этот пост")
+        title = get_object_or_404(Titles,
+                                  pk=self.kwargs['title_id'])
+        serializer.save(author=self.request.user, title=title)
 
     def get_queryset(self):
         review = get_object_or_404(Titles, id=self.kwargs["title_id"])
@@ -169,7 +169,7 @@ class GenresViewSet(
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
+    queryset = Titles.objects.all().annotate(rating=Avg('title__score'))
     pagination_class = PageNumberPagination
     permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
     filter_backends = [DjangoFilterBackend]

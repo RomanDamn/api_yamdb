@@ -38,7 +38,7 @@ class TitlePostSerializer(serializers.ModelSerializer):
 class TitleListSerializer(serializers.ModelSerializer):
     genre = GenresSerializer(many=True)
     category = CategoriesSerializer()
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(allow_null=True)
 
     class Meta:
         model = Titles
@@ -52,18 +52,20 @@ class TitleListSerializer(serializers.ModelSerializer):
             "rating",
         )
 
-    def get_rating(self, obj):
-        try:
-            return sum([review.score for review in obj.title.all()]) / obj.title.count()
-        except ZeroDivisionError:
-            return None
-
 
 class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(
         many=False, read_only=True, slug_field="description"
     )
     author = serializers.SlugRelatedField(read_only=True, slug_field="username")
+
+    def create(self, data):
+        name = self.context["view"].kwargs.get("title_id")
+        author = self.context["request"].user
+        message = 'Author review already exist'
+        if Review.objects.filter(title=name, author=author).exists():
+            raise serializers.ValidationError(message)
+        return Review.objects.create(**data)
 
     class Meta:
         fields = "__all__"
