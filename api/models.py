@@ -1,10 +1,7 @@
-from datetime import datetime
-
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.utils.translation import gettext as _
+from api.utils import current_year, max_value_current_year
 
 
 class User(AbstractUser):
@@ -26,52 +23,52 @@ class User(AbstractUser):
         return self.username
 
 
-class Categories(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=120)
     slug = models.SlugField(unique=True)
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
     def __str__(self):
         return self.name
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     name = models.CharField(max_length=120)
     slug = models.SlugField(unique=True)
+
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
     def __str__(self):
         return self.name
 
 
-def current_year():
-    return datetime.now().strftime("%Y")
-
-
-def max_value_current_year(value):
-    if value > 2100:
-        raise ValidationError(
-            _("%(value)s is not a correct year!"),
-            params={"value": value},
-        )
-
-
-class Titles(models.Model):
-    name = models.CharField(max_length=300)
-    year = models.PositiveIntegerField(
-        default=current_year(),
-        validators=[MinValueValidator(1450),
-                    max_value_current_year])
-    category = models.ForeignKey(
-        Categories,
-        on_delete=models.SET_NULL,
-        related_name="categories",
-        blank=True,
-        null=True,
-    )
-    description = models.TextField(null=True, blank=True)
-    genre = models.ManyToManyField(
-        Genres,
-        related_name="genres",
-    )
+class Title(models.Model):
+    name = models.CharField(max_length=300,
+                            verbose_name='Название')
+    year = models.PositiveIntegerField(default=current_year(),
+                                       verbose_name='Год',
+                                       validators=[MinValueValidator(1700),
+                                                   max_value_current_year],
+                                       db_index=True)
+    category = models.ForeignKey(Category,
+                                 verbose_name='Категории',
+                                 on_delete=models.SET_NULL,
+                                 related_name="titles",
+                                 blank=True,
+                                 null=True,
+                                 )
+    description = models.TextField(null=True,
+                                   blank=True
+                                   )
+    genre = models.ManyToManyField(Genre,
+                                   verbose_name='Жанрыэ',
+                                   related_name="genres",
+                                   )
 
     def __str__(self):
         return f"{self.name} ({self.year}г.)"
@@ -81,11 +78,13 @@ class Review(models.Model):
     text = models.TextField(blank=False)
     pub_date = models.DateTimeField("Дата публикации",
                                     auto_now_add=True)
-    author = models.ForeignKey(User, blank=True, on_delete=models.CASCADE,
-                               related_name="user")
+    author = models.ForeignKey(User,
+                               blank=True,
+                               on_delete=models.CASCADE,
+                               related_name="reviews")
     score = models.IntegerField(validators=[MinValueValidator(1),
                                             MaxValueValidator(10)])
-    title = models.ForeignKey(Titles,
+    title = models.ForeignKey(Title,
                               blank=True,
                               on_delete=models.CASCADE,
                               related_name="title")
@@ -99,10 +98,12 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="author")
-    review = models.ForeignKey(
-        Review, on_delete=models.CASCADE, related_name="comments"
-    )
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               related_name="author")
+    review = models.ForeignKey(Review,
+                               on_delete=models.CASCADE,
+                               related_name="comments")
     text = models.TextField()
     pub_date = models.DateTimeField(
         "Дата добавления",

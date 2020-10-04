@@ -15,13 +15,13 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .filters import TitleFilter
-from .models import Categories, Genres, Review, Titles, User
+from .models import Category, Genre, Review, Title, User
 
 from .permissions import IsAdminPerm, OwnResourcePermission, ReadOnly
 from .serializers import (
-    CategoriesSerializer,
+    CategoriySerializer,
     CommentSerializer,
-    GenresSerializer,
+    GenreSerializer,
     ReviewSerializer,
     TitleListSerializer,
     TitlePostSerializer,
@@ -36,12 +36,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [OwnResourcePermission]
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Titles,
+        title = get_object_or_404(Title,
                                   pk=self.kwargs['title_id'])
         serializer.save(author=self.request.user, title=title)
 
     def get_queryset(self):
-        review = get_object_or_404(Titles, id=self.kwargs["title_id"])
+        review = get_object_or_404(Title, id=self.kwargs["title_id"])
         return review.title.all()
 
 
@@ -144,8 +144,8 @@ class CategoriesViewSet(
     mixins.ListModelMixin,
     GenericViewSet,
 ):
-    queryset = Categories.objects.all()
-    serializer_class = CategoriesSerializer
+    queryset = Category.objects.all()
+    serializer_class = CategoriySerializer
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ["=name"]
@@ -159,8 +159,8 @@ class GenresViewSet(
     mixins.ListModelMixin,
     GenericViewSet,
 ):
-    queryset = Genres.objects.all()
-    serializer_class = GenresSerializer
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ["=name"]
@@ -169,7 +169,7 @@ class GenresViewSet(
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all().annotate(rating=Avg('title__score'))
+    queryset = Title.objects.all().annotate(rating=Avg('title__score'))
     pagination_class = PageNumberPagination
     permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
     filter_backends = [DjangoFilterBackend]
