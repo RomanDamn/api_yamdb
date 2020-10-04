@@ -19,9 +19,9 @@ from .models import Category, Genre, Review, Title, User
 
 from .permissions import IsAdminPerm, OwnResourcePermission, ReadOnly
 from .serializers import (
-    CategoriesSerializer,
+    CategoriySerializer,
     CommentSerializer,
-    GenresSerializer,
+    GenreSerializer,
     ReviewSerializer,
     TitleListSerializer,
     TitlePostSerializer,
@@ -145,7 +145,7 @@ class CategoriesViewSet(
     GenericViewSet,
 ):
     queryset = Category.objects.all()
-    serializer_class = CategoriesSerializer
+    serializer_class = CategoriySerializer
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ["=name"]
@@ -160,7 +160,7 @@ class GenresViewSet(
     GenericViewSet,
 ):
     queryset = Genre.objects.all()
-    serializer_class = GenresSerializer
+    serializer_class = GenreSerializer
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ["=name"]
