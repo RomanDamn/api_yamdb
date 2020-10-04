@@ -9,13 +9,19 @@ import api.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0005_auto_20200930_0802'),
+        ("api", "0005_auto_20200930_0802"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='titles',
-            name='year',
-            field=models.PositiveIntegerField(default='2020', validators=[django.core.validators.MinValueValidator(1450), api.models.max_value_current_year]),
+            model_name="titles",
+            name="year",
+            field=models.PositiveIntegerField(
+                default="2020",
+                validators=[
+                    django.core.validators.MinValueValidator(1450),
+                    api.models.max_value_current_year,
+                ],
+            ),
         ),
     ]

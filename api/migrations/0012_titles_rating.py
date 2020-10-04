@@ -7,14 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0011_auto_20201001_1638'),
+        ("api", "0011_auto_20201001_1638"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='titles',
-            name='rating',
-            field=models.IntegerField(default=0, validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(10)]),
+            model_name="titles",
+            name="rating",
+            field=models.IntegerField(
+                default=0,
+                validators=[
+                    django.core.validators.MinValueValidator(1),
+                    django.core.validators.MaxValueValidator(10),
+                ],
+            ),
             preserve_default=False,
         ),
     ]
