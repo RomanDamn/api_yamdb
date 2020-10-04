@@ -26,7 +26,7 @@ class User(AbstractUser):
         return self.username
 
 
-class Categories(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=120)
     slug = models.SlugField(unique=True)
 
@@ -34,7 +34,7 @@ class Categories(models.Model):
         return self.name
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     name = models.CharField(max_length=120)
     slug = models.SlugField(unique=True)
 
@@ -54,14 +54,14 @@ def max_value_current_year(value):
         )
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField(max_length=300)
     year = models.PositiveIntegerField(
         default=current_year(),
         validators=[MinValueValidator(1450),
                     max_value_current_year])
     category = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.SET_NULL,
         related_name="categories",
         blank=True,
@@ -69,7 +69,7 @@ class Titles(models.Model):
     )
     description = models.TextField(null=True, blank=True)
     genre = models.ManyToManyField(
-        Genres,
+        Genre,
         related_name="genres",
     )
 
@@ -85,7 +85,7 @@ class Review(models.Model):
                                related_name="user")
     score = models.IntegerField(validators=[MinValueValidator(1),
                                             MaxValueValidator(10)])
-    title = models.ForeignKey(Titles,
+    title = models.ForeignKey(Title,
                               blank=True,
                               on_delete=models.CASCADE,
                               related_name="title")
