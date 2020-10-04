@@ -42,12 +42,12 @@ class Title(models.Model):
     name = models.CharField(max_length=300)
     year = models.PositiveIntegerField(
         default=current_year(),
-        validators=[MinValueValidator(1450),
+        validators=[MinValueValidator(1700),
                     max_value_current_year])
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
-        related_name="categories",
+        related_name="titles",
         blank=True,
         null=True,
     )
@@ -66,13 +66,13 @@ class Review(models.Model):
     pub_date = models.DateTimeField("Дата публикации",
                                     auto_now_add=True)
     author = models.ForeignKey(User, blank=True, on_delete=models.CASCADE,
-                               related_name="user")
+                               related_name="reviews")
     score = models.IntegerField(validators=[MinValueValidator(1),
                                             MaxValueValidator(10)])
     title = models.ForeignKey(Title,
                               blank=True,
                               on_delete=models.CASCADE,
-                              related_name="title")
+                              related_name="reviews")
 
     class Meta:
         ordering = ["pub_date"]
