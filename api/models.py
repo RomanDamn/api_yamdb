@@ -1,11 +1,7 @@
-from datetime import datetime
-
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.utils.translation import gettext as _
-
+from api.utils import current_year, max_value_current_year
 
 class User(AbstractUser):
     USER = 'user'
@@ -40,18 +36,6 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.name
-
-
-def current_year():
-    return datetime.now().strftime("%Y")
-
-
-def max_value_current_year(value):
-    if value > 2100:
-        raise ValidationError(
-            _("%(value)s is not a correct year!"),
-            params={"value": value},
-        )
 
 
 class Title(models.Model):

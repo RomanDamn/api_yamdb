@@ -26,4 +26,3 @@ admin.site.register(Genre)
 admin.site.register(Title)
 admin.site.register(Comment)
 admin.site.register(Review)
-
