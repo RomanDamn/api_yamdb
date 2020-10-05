@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from api.utils import current_year, max_value_current_year
 
 
@@ -66,8 +67,8 @@ class Title(models.Model):
                                    blank=True
                                    )
     genre = models.ManyToManyField(Genre,
-                                   verbose_name='Жанрыэ',
-                                   related_name="genres",
+                                   verbose_name='Жанры',
+                                   related_name="titles",
                                    )
 
     def __str__(self):
