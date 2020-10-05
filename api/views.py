@@ -130,40 +130,21 @@ class CatalogViewSet(
     mixins.ListModelMixin,
     GenericViewSet,
 ):
-    permission_classes = [IsAdminPerm | ReadOnly]
+    permission_classes = [IsAuthenticated & IsAdminPerm  | ReadOnly]
     lookup_field = "slug"
     search_fields = ["=name"]
     filter_backends = [filters.SearchFilter]
+    pagination_class = PageNumberPagination
 
 
-class CategoriesViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    GenericViewSet,
-):
+class CategoriesViewSet(CatalogViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["=name"]
-    lookup_field = "slug"
-    permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
 
 
-class GenresViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    GenericViewSet,
-):
+class GenresViewSet(CatalogViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["=name"]
-    lookup_field = "slug"
-    permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
