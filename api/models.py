@@ -66,8 +66,8 @@ class Title(models.Model):
                                    blank=True
                                    )
     genre = models.ManyToManyField(Genre,
-                                   verbose_name='Жанрыэ',
-                                   related_name="genres",
+                                   verbose_name='Жанры',
+                                   related_name="titles",
                                    )
 
     def __str__(self):
