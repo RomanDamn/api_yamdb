@@ -77,7 +77,9 @@ class CommentSerializer(serializers.ModelSerializer):
         many=False, read_only=True, slug_field="username"
     )
 
-    review = serializers.SlugRelatedField(many=False, read_only=True, slug_field="text")
+    review = serializers.SlugRelatedField(many=False,
+                                          read_only=True,
+                                          slug_field="text")
 
     class Meta:
         fields = "__all__"
