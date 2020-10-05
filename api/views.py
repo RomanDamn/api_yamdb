@@ -1,10 +1,8 @@
-from api_yamdb.settings import YAMDB_EMAIL
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework import filters, generics, mixins, permissions, viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -14,9 +12,10 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api_yamdb.settings import YAMDB_EMAIL
+
 from .filters import TitleFilter
 from .models import Category, Genre, Review, Title, User
-
 from .permissions import IsAdminPerm, OwnResourcePermission, ReadOnly
 from .serializers import (
     CategorySerializer,
@@ -40,8 +39,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, title=title)
 
     def get_queryset(self):
-        review = get_object_or_404(Title, id=self.kwargs["title_id"])
-        return review.reviews.all()
+        title = get_object_or_404(Title, id=self.kwargs["title_id"])
+        return title.reviews.all()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
