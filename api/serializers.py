@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .models import Category, Comment, Genre, Review, Title, User
 
 
-class CategoriySerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("name", "slug")
         model = Category
@@ -37,7 +37,7 @@ class TitlePostSerializer(serializers.ModelSerializer):
 
 class TitleListSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
-    category = CategoriySerializer()
+    category = CategorySerializer()
     rating = serializers.IntegerField(allow_null=True)
 
     class Meta:
