@@ -57,7 +57,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(
         many=False, read_only=True, slug_field="description"
     )
-    author = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    author = serializers.SlugRelatedField(read_only=True,
+                                          slug_field="username")
 
     def create(self, data):
         name = self.context["view"].kwargs.get("title_id")
@@ -77,7 +78,9 @@ class CommentSerializer(serializers.ModelSerializer):
         many=False, read_only=True, slug_field="username"
     )
 
-    review = serializers.SlugRelatedField(many=False, read_only=True, slug_field="text")
+    review = serializers.SlugRelatedField(many=False,
+                                          read_only=True,
+                                          slug_field="text")
 
     class Meta:
         fields = "__all__"
@@ -86,7 +89,13 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class UserCodeSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ("username", "pk", "first_name", "last_name", "email", "role", "bio")
+        fields = ("username",
+                  "pk",
+                  "first_name",
+                  "last_name",
+                  "email",
+                  "role",
+                  "bio")
         model = User
 
 
