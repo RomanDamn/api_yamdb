@@ -5,13 +5,13 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from api.views import CodeJWTView, CreateCodeViewSet, GetUsersView, InfoMeView
 
-from .views import (CategoriesViewSet, CommentViewSet, GenresViewSet,
+from .views import (CategoryViewSet, CommentViewSet, GenreViewSet,
                     ReviewViewSet, TitleViewSet)
 
 router_v1 = DefaultRouter()
 router_v1.register("users", GetUsersView)
-router_v1.register("categories", CategoriesViewSet)
-router_v1.register("genres", GenresViewSet)
+router_v1.register("categories", CategoryViewSet)
+router_v1.register("genres", GenreViewSet)
 router_v1.register("titles", TitleViewSet)
 
 router_v1.register(
