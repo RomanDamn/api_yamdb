@@ -84,7 +84,7 @@ class Review(models.Model):
     author = models.ForeignKey(User,
                                blank=True,
                                on_delete=models.CASCADE,
-                               related_name="review_author")
+                               related_name="reviews")
     score = models.IntegerField(validators=[MinValueValidator(1),
                                             MaxValueValidator(10)])
     title = models.ForeignKey(Title,
@@ -103,7 +103,7 @@ class Review(models.Model):
 class Comment(models.Model):
     author = models.ForeignKey(User,
                                on_delete=models.CASCADE,
-                               related_name="author")
+                               related_name="comments")
     review = models.ForeignKey(Review,
                                on_delete=models.CASCADE,
                                related_name="comments")
