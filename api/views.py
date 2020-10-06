@@ -147,7 +147,7 @@ class GenreViewSet(CatalogViewSet):
     serializer_class = GenreSerializer
 
 
-class TitlesViewSet(viewsets.ModelViewSet):
+class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     pagination_class = PageNumberPagination
     permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
