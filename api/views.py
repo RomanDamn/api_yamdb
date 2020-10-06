@@ -142,7 +142,7 @@ class CategoryViewSet(CatalogViewSet):
     serializer_class = CategorySerializer
 
 
-class GenresViewSet(CatalogViewSet):
+class GenreViewSet(CatalogViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
