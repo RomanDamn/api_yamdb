@@ -1,3 +1,5 @@
+from rest_framework.decorators import action
+
 from api_yamdb.settings import YAMDB_EMAIL
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
@@ -106,24 +108,31 @@ class CodeJWTView(APIView):
         )
 
 
-class InfoMeView(generics.RetrieveUpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserCodeSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_update(self, serializer):
-        serializer.save()
-
-    def get_object(self):
-        return self.request.user
-
-
-class GetUsersView(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserCodeSerializer
     lookup_field = "username"
     pagination_class = PageNumberPagination
     permission_classes = [permissions.IsAuthenticated, IsAdminPerm]
+
+    @action(
+        detail=False,
+        methods=['get', 'patch'],
+        permission_classes=[IsAuthenticated]
+    )
+    def me(self, request):
+        user = request.user
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+        serializer = self.get_serializer(
+            user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
 
 class CatalogViewSet(
