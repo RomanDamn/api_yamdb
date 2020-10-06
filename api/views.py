@@ -1,13 +1,9 @@
-from rest_framework.decorators import action
-
-from api_yamdb.settings import YAMDB_EMAIL
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db import IntegrityError
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, mixins, permissions, status, viewsets
-from rest_framework.exceptions import ParseError
+from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -15,14 +11,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import action
+
+from api_yamdb.settings import YAMDB_EMAIL
 
 from .filters import TitleFilter
-from .models import Categories, Genres, Review, Titles, User
+from .models import Category, Genre, Review, Title, User
 from .permissions import IsAdminPerm, OwnResourcePermission, ReadOnly
 from .serializers import (
-    CategoriesSerializer,
+    CategorySerializer,
     CommentSerializer,
-    GenresSerializer,
+    GenreSerializer,
     ReviewSerializer,
     TitleListSerializer,
     TitlePostSerializer,
@@ -36,15 +35,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [OwnResourcePermission]
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Titles, pk=self.kwargs["title_id"])
-        try:
-            serializer.save(author=self.request.user, title=title)
-        except IntegrityError:
-            raise ParseError(detail="Автор уже отставил" " свой обзор на этот пост")
+        title = get_object_or_404(Title,
+                                  pk=self.kwargs['title_id'])
+        serializer.save(author=self.request.user, title=title)
 
     def get_queryset(self):
-        review = get_object_or_404(Titles, id=self.kwargs["title_id"])
-        return review.title.all()
+        title = get_object_or_404(Title, id=self.kwargs["title_id"])
+        return title.reviews.all()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -141,44 +138,25 @@ class CatalogViewSet(
     mixins.ListModelMixin,
     GenericViewSet,
 ):
-    permission_classes = [IsAdminPerm | ReadOnly]
-    lookup_field = "slug"
-    search_fields = ["=name"]
-    filter_backends = [filters.SearchFilter]
-
-
-class CategoriesViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    GenericViewSet,
-):
-    queryset = Categories.objects.all()
-    serializer_class = CategoriesSerializer
-    pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["=name"]
-    lookup_field = "slug"
     permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
-
-
-class GenresViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    GenericViewSet,
-):
-    queryset = Genres.objects.all()
-    serializer_class = GenresSerializer
-    pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["=name"]
     lookup_field = "slug"
-    permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
+    search_fields = ["=name"]
+    filter_backends = [filters.SearchFilter]
+    pagination_class = PageNumberPagination
 
 
-class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
+class CategoryViewSet(CatalogViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(CatalogViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     pagination_class = PageNumberPagination
     permission_classes = [IsAuthenticated & IsAdminPerm | ReadOnly]
     filter_backends = [DjangoFilterBackend]

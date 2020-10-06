@@ -1,30 +1,30 @@
 from rest_framework import serializers
 
-from .models import Categories, Comment, Genres, Review, Titles, User
+from .models import Category, Comment, Genre, Review, Title, User
 
 
-class CategoriesSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("name", "slug")
-        model = Categories
+        model = Category
 
 
-class GenresSerializer(serializers.ModelSerializer):
+class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("name", "slug")
-        model = Genres
+        model = Genre
 
 
 class TitlePostSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
-        slug_field="slug", many=True, queryset=Genres.objects.all()
+        slug_field="slug", many=True, queryset=Genre.objects.all()
     )
     category = serializers.SlugRelatedField(
-        slug_field="slug", queryset=Categories.objects.all()
+        slug_field="slug", queryset=Category.objects.all()
     )
 
     class Meta:
-        model = Titles
+        model = Title
         fields = (
             "id",
             "name",
@@ -36,12 +36,12 @@ class TitlePostSerializer(serializers.ModelSerializer):
 
 
 class TitleListSerializer(serializers.ModelSerializer):
-    genre = GenresSerializer(many=True)
-    category = CategoriesSerializer()
-    rating = serializers.SerializerMethodField()
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+    rating = serializers.IntegerField(allow_null=True)
 
     class Meta:
-        model = Titles
+        model = Title
         fields = (
             "id",
             "name",
@@ -52,18 +52,21 @@ class TitleListSerializer(serializers.ModelSerializer):
             "rating",
         )
 
-    def get_rating(self, obj):
-        try:
-            return sum([review.score for review in obj.title.all()]) / obj.title.count()
-        except ZeroDivisionError:
-            return None
-
 
 class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(
         many=False, read_only=True, slug_field="description"
     )
-    author = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    author = serializers.SlugRelatedField(read_only=True,
+                                          slug_field="username")
+
+    def create(self, data):
+        name = self.context["view"].kwargs.get("title_id")
+        author = self.context["request"].user
+        message = 'Author review already exist'
+        if Review.objects.filter(title=name, author=author).exists():
+            raise serializers.ValidationError(message)
+        return Review.objects.create(**data)
 
     class Meta:
         fields = "__all__"
@@ -75,7 +78,9 @@ class CommentSerializer(serializers.ModelSerializer):
         many=False, read_only=True, slug_field="username"
     )
 
-    review = serializers.SlugRelatedField(many=False, read_only=True, slug_field="text")
+    review = serializers.SlugRelatedField(many=False,
+                                          read_only=True,
+                                          slug_field="text")
 
     class Meta:
         fields = "__all__"
@@ -84,7 +89,13 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class UserCodeSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ("username", "pk", "first_name", "last_name", "email", "role", "bio")
+        fields = ("username",
+                  "pk",
+                  "first_name",
+                  "last_name",
+                  "email",
+                  "role",
+                  "bio")
         model = User
 
 

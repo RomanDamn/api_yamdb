@@ -16,18 +16,13 @@ class ReadOnly(BasePermission):
 
 class OwnResourcePermission(BasePermission):
     def has_permission(self, request, view):
-        return (
-            request.method in SAFE_METHODS
-            and request.user.is_anonymous
-            or request.method in SAFE_METHODS
-            or request.user.is_authenticated
-        )
+        return (request.method in SAFE_METHODS and
+                request.user.is_anonymous or
+                request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        if request.method == "PATCH" or request.method == "DELETE":
-            return (
-                obj.author == request.user
-                or request.user.role == "admin"
-                or request.user.role == "moderator"
-            )
+        if request.method in ['PATCH', 'DELETE']:
+            return (obj.author == request.user or
+                    request.user.role in [request.user.ADMIN,
+                                          request.user.MODERATOR])
         return True
