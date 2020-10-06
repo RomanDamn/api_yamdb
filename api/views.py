@@ -137,12 +137,12 @@ class CatalogViewSet(
     pagination_class = PageNumberPagination
 
 
-class CategoriesViewSet(CatalogViewSet):
+class CategoryViewSet(CatalogViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenresViewSet(CatalogViewSet):
+class GenreViewSet(CatalogViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
